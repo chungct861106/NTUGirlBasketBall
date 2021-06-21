@@ -1,3 +1,4 @@
+import { Result } from "antd";
 import Department from "../department.json";
 const config = {};
 config.department = Department;
@@ -33,10 +34,7 @@ const time = ["下午12:30", "晚上6:30", "晚上7:30"];
 
 function Getdepartment(part) {
   if (part in Department.info) return Department.info[part]["zh"];
-  else {
-    console.log(part);
-    return part;
-  }
+  else return "NULL";
 }
 function SpecialDate(date) {
   if (date === null) return "NONE";

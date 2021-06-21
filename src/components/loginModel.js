@@ -1,7 +1,8 @@
-import React,{ useRef, useState } from 'react'
-import { Modal, Form, Input, Button } from 'antd'
+import React,{ useRef, useState, useEffect } from 'react'
+import { Modal, Form, Input } from 'antd'
 import { usePages } from '../hooks/usePages'
 import { Login, User } from '../axios'
+
 
 const formItemLayout = {
   labelCol: {
@@ -26,7 +27,7 @@ export default function LoginModel(props) {
   const usernameRef = useRef()
   const passwordRef = useRef()
   const emailRef = useRef()
-  const { setUserInfo } = usePages()
+  const { setUserInfo, me, setMe } = usePages()
 
   const [ showWarn, setShowWarn ] = useState(false);
   const [ showForgetPw, setShowForgetPw ] = useState(false);
@@ -34,46 +35,46 @@ export default function LoginModel(props) {
 
   const handleOK = async () => {
     if(!showForgetPw){
-      const msg = await Login(usernameRef.current.props.value, passwordRef.current.props.value)
-      if( typeof(msg) !== "string"){
+      try{
+        const msg = await Login(usernameRef.current.props.value, passwordRef.current.props.value)
+        localStorage.setItem("userInfo", JSON.stringify(msg.token))
         setUserInfo(msg)
         props.setVisible(false)
         setShowWarn(false)
-      }else{
+      } catch {
         setShowWarn(true)
       }
     }else{
-        const msg = await User.SendRemindEmail(emailRef.current.props.value)
-        console.log("remind email res: ", msg)
-        if( typeof(msg) !== "string"){
-          setShowWarn(false)
-        }else{
-          setShowWarn(true)
-        }
+      try{
+        await User.SendRemindEmail(emailRef.current.props.value)
+        setShowWarn(false)
+      } catch{
+        setShowWarn(true)
+      }
     }
       
     form.resetFields();
-  }
-
-  const handleCancel = () => {
-    props.setVisible(false)
   }
 
   const handleForgotPw = () => {
     setShowForgetPw(true)
   }
 
+  useEffect(() => {
+    setShowWarn(false)
+  }, [ showForgetPw ])
 
   return(
     <div>
       <Modal 
       visible = { props.visible }
       onOk = { handleOK }
-      onCancel = { handleCancel } 
+      onCancel = { showForgetPw?()=>setShowForgetPw(false):
+                                ()=>props.setVisible(false)} 
       afterClose = { ()=>{
             setShowWarn(false)
-            setShowForgetPw(false)
-           }}
+            setShowForgetPw(false)}}
+      cancelText={showForgetPw?"返回登入":"Cancel"}
       >
         <Form 
           {...formItemLayout}
@@ -95,7 +96,7 @@ export default function LoginModel(props) {
               <Form.Item
               name="username"
               label="Username">
-                <Input ref={usernameRef} />
+                <Input ref={usernameRef}/>
               </Form.Item>
             
               <Form.Item
@@ -107,7 +108,7 @@ export default function LoginModel(props) {
                   message: 'Please input your password!',
                 },
               ]}>
-                <Input.Password ref={passwordRef} />
+                <Input.Password ref={passwordRef}/>
               </Form.Item>
     
               <Form.Item>

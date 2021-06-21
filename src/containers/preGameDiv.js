@@ -45,12 +45,7 @@ const LeftBlock = styled.div`
     width: 25%;
     float:left;
 `
-const RightBlock = styled.div`
-    padding: 5px;
-    // border: 1px solid black;
-    width: 75%;
-    float:left;
-`
+
 
 const formItemLayout = {
     labelCol: {
@@ -73,15 +68,18 @@ const formItemLayout = {
 
 const PreGameDiv = () => {
 
-    console.log("in preGame Div")
-
-    const { saveResult, setCycle3, setCycle4 } = usePreGame()
+    const { saveResult, setCycle3, setCycle4, editable, setEditable, generateModal } = usePreGame()
     const [ showChangeCycle, setShowChangeCycle ] = useState(false)
-    // const [ showSaveMes, setShowSaveMes ] = useState(false)
-    const [ editable, setEditable ] = useState(true)
+    
     const cycle3Ref = useRef()
     const cycle4Ref = useRef()
     const [ form ] = Form.useForm()
+
+    const RightBlock = styled.div`
+        padding: 5px;
+        width: ${editable?"75%":"100%"};
+        float:left;
+    `
 
     const handleOK = (e) => {
         setCycle3(cycle3Ref.current.props.value)
@@ -90,36 +88,7 @@ const PreGameDiv = () => {
         setShowChangeCycle(false)
     }   
 
-    const generateModal = () =>{
-        let secondsToGo = 5
-        const modal = Modal.success({
-            title: 'This is a notification message',
-            content: `${secondsToGo} 秒後跳轉至結果頁面`,
-        })
-        const timer = setInterval(() => {
-            secondsToGo -= 1
-            modal.update({
-                content: `${secondsToGo} 秒後跳轉至結果頁面`,
-            })
-        }, 1000)
-        setTimeout(() => {
-            clearInterval(timer)
-            modal.destroy()
-            setEditable(false)
-        }, secondsToGo * 1000);
-
-        
-    }
-
-    // useMemo(() => {
-    //     console.log("in show modal, into useEffect", showSaveMes)
-    //     if (showSaveMes){
-    //         generateModal()
-    //         setShowSaveMes(false)
-    //     }else{
-    //         setEditable(false)
-    //     }
-    // }, [showSaveMes])
+    
 
     return(
         <>
@@ -132,7 +101,6 @@ const PreGameDiv = () => {
                                                 <StyledButton onClick={()=>setShowChangeCycle(true)}>更改循環數目</StyledButton>
                                                 <StyledButton onClick={()=>{
                                                     saveResult()
-                                                    generateModal()
                                                 }}>輸出結果</StyledButton>
                                         </>):(
                                                 <StyledButton onClick={()=>{setEditable(true)}}>更動預賽</StyledButton>

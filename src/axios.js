@@ -1,7 +1,6 @@
 import axios from "axios";
 
 const serverURL = "https://girlbasketball.herokuapp.com/";
-
 const testUsers = {
   adiminister: [
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJhY2NvdW50IjoidGhvbXNvbjg2MTEwNiIsInVzZXJuYW1lIjoidGhvbXNvbiIsImVtYWlsIjoidGhvbXNvbjg2MTEwNkBnbWFpbC5jb20iLCJhY3RpdmUiOjEsImFkaW0iOiJhZG1pbmlzdGVyIiwiaWF0IjoxNjIxNjU3MTE4LCJleHAiOjE2Mzk2NTcxMTh9.rx55CJNzevSUFJUP1EFjukPTgs47s2E42Ex-XHe_FdU",
@@ -24,6 +23,9 @@ const testUsers = {
 // 調整這去改變目前使用者身分 Ex: testUser.team[0] (0號系隊使用者)
 let token = testUsers.adiminister[0];
 
+export const gettoken = () => {
+  return token;
+};
 function DateConverter(date) {
   return date !== null ? new Date(date).toISOString() : null;
 }
@@ -49,7 +51,100 @@ export const Login = async (account, password) => {
     token = response.data.token;
     return response.data;
   } catch (err) {
-    return `[Login][Error]` + err;
+    // return `[Login][Error]` + err;
+    throw err;
+  }
+};
+
+export const Player = {
+  Create: async ({ name, number, student_id, grade, team_id }) => {
+    // [Must] studentID            學號
+    // [Must] department           隊伍
+    // [Must] grade                年級
+    // [Q]    PhotoURL?
+    console.log(name);
+    try {
+      let response = await axios({
+        method: "POST",
+        url: serverURL + "players/create",
+        data: {
+          name,
+          number,
+          student_id,
+          grade,
+          team_id,
+        },
+        headers: { Authorization: token },
+      });
+      return response.data;
+    } catch (err) {
+      return `[Error][Player][Create]` + err;
+    }
+  },
+
+  Delete: async ({ player_id }) => {
+    // [Must] id       User ID
+    // [Must] token    使用者登入憑證 {adim: administer}
+    // player_id = player_id.player_id
+    console.log(player_id);
+    try {
+      let response = await axios({
+        method: "DELETE",
+        url: serverURL + "players/delete",
+        data: { player_id },
+        headers: { Authorization: token },
+      });
+      return response.data;
+    } catch (err) {
+      return `[Error][Player][Delete]` + err;
+    }
+  },
+
+  GetAllPlayerByTeamID: async (team_id) => {
+    try {
+      let response = await axios({
+        method: "GET",
+        url: serverURL + "players/getAllPlayerByTeamId",
+        params: { team_id },
+        headers: { Authorization: token },
+      });
+      return response.data;
+    } catch (err) {
+      return `[Error][Player][GetAllPlayerByTeamID]` + err;
+    }
+  },
+
+  Update: async ({ player_id, name, number, student_id, grade, team_id }) => {
+    // [Must] id       Team name
+    // [Must] name     Team department
+    // [Must] token    {adim:team}
+
+    try {
+      let response = await axios({
+        method: "POST",
+        url: serverURL + "players/update",
+        data: { player_id, name, number, student_id, grade, team_id },
+        headers: { Authorization: token },
+      });
+      return response.data;
+    } catch (err) {
+      return `[Error][Team][Update]` + err;
+    }
+  },
+};
+
+export const CheckToken = async (storageToken) => {
+  token = storageToken.slice(1, -1);
+
+  try {
+    let response = await axios({
+      method: "GET",
+      url: serverURL + "users/checkToken",
+      headers: { Authorization: token },
+    });
+    return response.data.token;
+  } catch (err) {
+    throw err;
   }
 };
 
@@ -178,7 +273,8 @@ export const User = {
       });
       return response.data;
     } catch (err) {
-      return `[Error][User][SendRemindInfo]` + err;
+      // return `[Error][User][SendRemindInfo]` + err;
+      throw err;
     }
   },
 
@@ -289,6 +385,21 @@ export const Team = {
       return `[Error][Team][GetALL]` + err;
     }
   },
+  GetTeamIDbyUser: async (user_id) => {
+    // [Must] token    {adim:adimister}
+    console.log(user_id);
+    try {
+      let response = await axios({
+        method: "GET",
+        url: serverURL + "teams/GetTeamIDbyUser",
+        headers: { Authorization: token },
+        query: { user_id },
+      });
+      return response.data;
+    } catch (err) {
+      return `[Error][Team][GetTeamIDbyUser]` + err;
+    }
+  },
   GetInterGame: async () => {
     // [Must] token {adim: adiminister}
     try {
@@ -321,6 +432,23 @@ export const Team = {
       return `[Error][Team][Update]` + err;
     }
   },
+  UpdatePaid: async (team_id, status) => {
+    // [Must] id       Team name
+    // [Must] name     Team department
+    // [Must] token    {adim:team}
+
+    try {
+      let response = await axios({
+        method: "POST",
+        url: serverURL + "teams/updatePaid",
+        data: { team_id, status },
+        headers: { Authorization: token },
+      });
+      return response.data;
+    } catch (err) {
+      return `[Error][Team][UpdatePaid]` + err;
+    }
+  },
 
   UpdateSession: async (sessionType, id, teamSession) => {
     // [Must] sessionType     preGame || interGame
@@ -338,6 +466,21 @@ export const Team = {
       return response.data;
     } catch (err) {
       return `[ERROR][Team][Update_session]` + err;
+    }
+  },
+
+  CheckFillSession: async (sessionType) => {
+    try {
+      let response = await axios({
+        method: "GET",
+        url: serverURL + "teams/checkFillSession",
+        params: { sessionType },
+        headers: { Authorization: token },
+      });
+      console.log("in axios, teams, checkFillSession: ", response);
+      return response.data;
+    } catch (err) {
+      throw err;
     }
   },
 };
@@ -448,12 +591,17 @@ export const Match = {
     }
   },
 
-  Create: async (home, away, stage) => {
+  Create: async (home, away, stage, stage_session) => {
     try {
       let response = await axios({
         method: "POST",
         url: serverURL + "matches/create",
-        data: { home_id: home, away_id: away, stage: stage },
+        data: {
+          home_id: home,
+          away_id: away,
+          stage: stage,
+          stage_session: stage_session,
+        },
         headers: { Authorization: token },
       });
       return response.data;
@@ -462,17 +610,43 @@ export const Match = {
     }
   },
 
-  CreateInterMatch: async (home, away, stage) => {
+  // CreateInterMatch: async( home, away, stage ) => {
+  //   try{
+  //     let response = await axios({
+  //       method: "POST",
+  //       url: serverURL + "matches/createInterMatch",
+  //       data: { home_id: home, away_id: away, stage: stage},
+  //       headers: { Authorization: token },
+  //     });
+  //     return response.data;
+  //   } catch (err){
+  //     return `[Error][Match][CreateInterMatch]` + err;
+  //   }
+  // },
+  DeleteSession: async (stage) => {
     try {
       let response = await axios({
-        method: "POST",
-        url: serverURL + "matches/createInterMatch",
-        data: { home_id: home, away_id: away, stage: stage },
-        header: { Authorization: token },
+        method: "DELETE",
+        url: serverURL + "matches/deleteSession",
+        params: { stage: stage },
+        headers: { Authorization: token },
       });
       return response.data;
     } catch (err) {
-      return `[Error][Match][CreateInterMatch]` + err;
+      throw err;
+    }
+  },
+  CheckIfStage: async (stage) => {
+    try {
+      let response = await axios({
+        method: "GET",
+        url: serverURL + "matches/checkIfStage",
+        params: { stage },
+        headers: { Authorization: token },
+      });
+      return response.data;
+    } catch (err) {
+      throw err;
     }
   },
 };
@@ -582,6 +756,19 @@ export const Recorder = {
       return `[Error][Recorder][Update]` + err;
     }
   },
+  InCharge: async (id) => {
+    try {
+      let response = await axios({
+        method: "GET",
+        url: serverURL + "recorders/Incharge",
+        params: { id },
+        headers: { Authorization: token },
+      });
+      return response.data;
+    } catch (err) {
+      return `[Error][Recorder][Incharge]` + err;
+    }
+  },
 };
 
 const doLogin = async (username, password) => {
@@ -609,6 +796,51 @@ const doSignup = async (SignUpObj) => {
   }
   const msg = true;
   return msg;
+};
+
+export const Post = {
+  Create: async (type, title_category, title_content, content) => {
+    try {
+      let response = await axios({
+        method: "POST",
+        url: serverURL + "posts/create",
+        data: { type, title_category, title_content, content },
+        headers: { Authorization: token },
+      });
+      return response.data;
+    } catch (err) {
+      return err;
+    }
+  },
+  GetTypeContent: async (type) => {
+    try {
+      let response = await axios({
+        method: "GET",
+        url: serverURL + "posts/getType",
+        params: { type },
+        // headers: { Authorization: token }
+      });
+      return response.data;
+    } catch (err) {
+      return `[Error][Post][GetTypeContent]`;
+    }
+  },
+};
+
+export const Record = {
+  CreateTeamRecord: async (match_id, team_id) => {
+    try {
+      let response = await axios({
+        method: "POST",
+        url: serverURL + "records/createTeamRecord",
+        data: { match_id, team_id },
+        headers: { Authorization: token },
+      });
+      console.log("in createTeamRecord, res: ", response);
+    } catch (err) {
+      return `[Error][Record][CreateTeamRecord]`;
+    }
+  },
 };
 
 export { doLogin, doSignup };

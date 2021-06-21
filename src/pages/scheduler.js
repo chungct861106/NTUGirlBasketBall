@@ -63,7 +63,9 @@ class App extends React.Component {
 
   componentDidMount = () => {
     (async () => {
-      let allmatches = await Match.GetALLMatch();
+      let allmatches = (await Match.GetALLMatch()).filter(
+        (x) => x.stage === "preGame"
+      );
       allmatches.forEach((match, index) => {
         match.text = `${match.home} vs ${match.away}`;
         match.startDate = new Date(match.startDate);
@@ -198,6 +200,9 @@ class App extends React.Component {
             height={50}
             width={"100%"}
             bounceEnabled={true}
+            showScrollbar="always"
+            useNative={false}
+            direction="horizontal"
           >
             <Draggable
               id="DragList"
@@ -298,15 +303,19 @@ class App extends React.Component {
   checkMatches = (id, home, away, startDate, field) => {
     let checkExist = this.state.appointments.find(
       (x) =>
+        startDate !== null &&
+        startDate !== undefined &&
+        x.startDate !== null &&
+        x.startDate !== undefined &&
         new Date(startDate).toISOString() ===
-          new Date(x.startDate).toISOString() && x.field === field
+          new Date(x.startDate).toISOString() &&
+        x.field === field
     );
     if (checkExist !== undefined) {
-      console.log(checkExist.startDate, startDate);
       return false;
     }
     let check = this.state.appointments.filter(
-      //取得當天所有已排的的比賽
+      // 取得當天所有已排的的比賽
       (x) =>
         x.arranged && // 已上排程
         id !== x.id && // 不是自己
@@ -317,8 +326,8 @@ class App extends React.Component {
         x.home === home ||
         x.home === away ||
         x.away === home ||
-        x.away === away || //在當天有其他比賽
-        (x.startDate === startDate && x.field === field) //在同一個時段以及場地有比賽
+        x.away === away || // 在當天有其他比賽
+        (x.startDate === startDate && x.field === field) // 在同一個時段以及場地有比賽
     );
     return check.length === 0 ? true : false;
   };
@@ -385,11 +394,11 @@ class App extends React.Component {
   };
 
   onAppointmentUpdating = (e) => {
-    console.log(e);
     if (this.uploading) {
       e.cancel = true;
       return;
     }
+    if (e.oldData.recorder_id !== e.newData.recorder_id) return;
     if (e.newData.allDay) e.cancel = true;
     if (e.newData.startDate.getHours() === 0) {
       e.cancel = true;
@@ -448,6 +457,10 @@ class App extends React.Component {
   onAppointmentFormOpening = (data) => {
     const { homeDepartment, awayDepartment, startDate, recorder_id } =
       data.appointmentData;
+    if (!homeDepartment) {
+      data.cancel = true;
+      return;
+    }
     if (this.checkIfNoGame(startDate)) {
       data.cancel = true;
       return;
