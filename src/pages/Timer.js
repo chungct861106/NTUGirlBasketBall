@@ -4,7 +4,6 @@ import { Time } from "../axios";
 import "devextreme/dist/css/dx.common.css";
 import "devextreme/dist/css/dx.light.css";
 import "../css/scheduler.css";
-import { LoadPanel } from "devextreme-react/load-panel";
 
 const currentDate = new Date(2021, 4, 24);
 const views = ["workWeek"];
@@ -37,7 +36,6 @@ let timeString = "No Update";
 function App() {
   const scheduler = useRef(null);
   const [appointments] = useState([]);
-  const [loading, setloading] = useState(true);
 
   const AddbusyTime = (data) => {
     let newappointments = {
@@ -83,7 +81,6 @@ function App() {
           scheduler.current.instance.addAppointment(time);
           return true;
         });
-      setloading(false);
     };
     GetData();
     return () => {
@@ -105,7 +102,7 @@ function App() {
         ref={scheduler}
         dataSource={appointments}
         timeZone="Asia/Taipei"
-        id="schedulerTimer"
+        id="scheduler"
         defaultCurrentDate={currentDate}
         startDayHour={1}
         endDayHour={4}
@@ -130,11 +127,6 @@ function App() {
           maxAppointmentsPerCell={1}
         />
       </Scheduler>
-      <LoadPanel
-        shadingColor="rgba(0,0,0,0.4)"
-        position={{ of: "#schedulerTimer" }}
-        visible={loading}
-      />
     </React.Fragment>
   );
 }
